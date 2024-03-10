@@ -1,3 +1,31 @@
+# Auto9x
+
+Auto9x is a fork of Snes9x that focuses on adding Lua scripting to the Gtk port.
+This fork is maintained by https://twitch.tv/FascinatedBox.
+
+I (box), have the following in mind for this fork:
+
+Mission statement:
+
+* Autotracking first: **I want to play randomizers.** That is my primary goal.
+  All other needs are secondary to that. I want to have an auto tracker, and Lua
+  scripting allows that to work. I am aware of the s9x nwa (network access)
+  fork, but I feel that Lua scripting is a more flexible alternative.
+
+* Linux first: I do not have Windows and I don't want to maintain two ports. I
+  will only work on the gtk port. I am leaving other ports up to make syncing to
+  upstream S9x easier.
+
+* Synced to S9x: I don't want to break stuff, so I'm extremely reluctant to add
+  functionality that alters S9x core functionality.
+
+* New script functions need use cases: I am very happy to add more script
+  functionality, provided that reasonable use cases are given.
+
+The original S9x README begins below this line.
+
+--------------------------------------------------------------------------------
+
 # Snes9x
 *Snes9x - Portable Super Nintendo Entertainment System (TM) emulator*
 

@@ -38,7 +38,8 @@ enum MovieState
 {
 	MOVIE_STATE_NONE = 0,
 	MOVIE_STATE_PLAY,
-	MOVIE_STATE_RECORD
+	MOVIE_STATE_RECORD,
+	MOVIE_STATE_FINISHED,
 };
 
 struct SMovie
@@ -64,6 +65,7 @@ struct SMovie
 	uint32	CurrentSample;
 	uint32	BytesPerSample;
 	uint32	RerecordCount;
+	bool8	SkipRerecordCount;
 	bool8	ReadOnly;
 	uint8	PortType[2];
 	int8	PortIDs[2][4];
@@ -92,7 +94,7 @@ static void		restore_movie_settings (void);
 static int		bytes_per_sample (void);
 static void		reserve_buffer_space (uint32);
 static void		reset_controllers (void);
-static void		read_frame_controller_data (bool);
+static void		read_frame_controller_data (bool, void (*resetFunc)() = NULL);
 static void		write_frame_controller_data (void);
 static void		flush_movie (void);
 static void		truncate_movie (void);
@@ -258,10 +260,10 @@ static void reset_controllers (void)
 	}
 }
 
-static void read_frame_controller_data (bool addFrame)
+static void read_frame_controller_data (bool addFrame, void (*resetFunc)())
 {
 	// reset code check
-	if (Movie.InputBufferPtr[0] == 0xff)
+	while (Movie.InputBufferPtr[0] == 0xff)
 	{
 		bool reset = true;
 		for (int i = 1; i < (int) Movie.BytesPerSample; i++)
@@ -276,7 +278,8 @@ static void read_frame_controller_data (bool addFrame)
 		if (reset)
 		{
 			Movie.InputBufferPtr += Movie.BytesPerSample;
-			S9xSoftReset();
+			if (resetFunc != (void(*)())NULL)
+				(*resetFunc)();
 			return;
 		}
 	}
@@ -500,7 +503,18 @@ static void change_state (MovieState new_state)
 			restore_previous_settings();
 	}
 
+	if (new_state == MOVIE_STATE_FINISHED)
+	{
+		truncate_movie();
+	}
+
 	Movie.State = new_state;
+}
+
+static void finish_playback (void)
+{
+	change_state(MOVIE_STATE_FINISHED);
+	S9xMessage(S9X_INFO, S9X_MOVIE_INFO, MOVIE_INFO_END);
 }
 
 void S9xMovieFreeze (uint8 **buf, uint32 *size)
@@ -533,6 +547,13 @@ int S9xMovieUnfreeze (uint8 *buf, uint32 size)
 {
 	if (!S9xMovieActive())
 		return (FILE_NOT_FOUND);
+
+	// not a movie snapshot
+	if (buf == NULL)
+	{
+		finish_playback();
+		return (SUCCESS);
+	}
 
 	if (size < sizeof(Movie.MovieId) + sizeof(Movie.CurrentFrame) + sizeof(Movie.MaxFrame) + sizeof(Movie.CurrentSample) + sizeof(Movie.MaxSample))
 		return (WRONG_FORMAT);
@@ -574,8 +595,8 @@ int S9xMovieUnfreeze (uint8 *buf, uint32 size)
 	}
 	else
 	{
-      uint32   space_processed = (Movie.BytesPerSample * (current_sample + 1));
-      if (current_frame > Movie.MaxFrame || current_sample > Movie.MaxSample || memcmp(Movie.InputBuffer, ptr, space_processed))
+		uint32   space_processed = (Movie.BytesPerSample * (current_sample + 1));
+		if (current_frame > Movie.MaxFrame || current_sample > Movie.MaxSample || memcmp(Movie.InputBuffer, ptr, space_processed))
 			return (SNAPSHOT_INCONSISTENT);
 
 		change_state(MOVIE_STATE_PLAY);
@@ -584,8 +605,15 @@ int S9xMovieUnfreeze (uint8 *buf, uint32 size)
 		Movie.CurrentSample = current_sample;
 	}
 
-	Movie.InputBufferPtr = Movie.InputBuffer + (Movie.BytesPerSample * Movie.CurrentSample);
-	read_frame_controller_data(true);
+	if (Movie.CurrentFrame <= Movie.MaxFrame && Movie.CurrentSample <= Movie.MaxSample)
+	{
+		Movie.InputBufferPtr = Movie.InputBuffer + (Movie.BytesPerSample * Movie.CurrentSample);
+		read_frame_controller_data(true);
+	}
+	else
+	{
+		finish_playback();
+	}
 
 	return (SUCCESS);
 }
@@ -908,6 +936,16 @@ void S9xMovieUpdate (bool addFrame)
 			break;
 		}
 
+		case MOVIE_STATE_FINISHED:
+		{
+			if (addFrame) {
+				S9xUpdateFrameCounter();
+				Movie.CurrentFrame++;
+			}
+
+			break;
+		}
+
 		default:
 		{
 			if (addFrame)
@@ -931,6 +969,33 @@ void S9xMovieUpdateOnReset (void)
 		if (!fwrite((Movie.InputBufferPtr - Movie.BytesPerSample), 1, Movie.BytesPerSample, Movie.File))
 			printf ("Failed writing reset data.\n");
 	}
+}
+
+static bool8 movie_reset_processed = false;
+static void MovieOnReset(void)
+{
+	Movie.CurrentSample++;
+	Movie.CurrentFrame++; // it must be called at frame boundary
+	S9xSoftReset();
+	movie_reset_processed = true;
+}
+
+// apply the next input without changing any movie states
+void MovieApplyNextInput(void)
+{
+	if (Movie.State != MOVIE_STATE_PLAY)
+		return;
+
+	uint8 *InputBufferPtr = Movie.InputBufferPtr;
+	do
+	{
+		movie_reset_processed = false;
+		if (Movie.CurrentFrame < Movie.MaxFrame && Movie.CurrentSample < Movie.MaxSample)
+			read_frame_controller_data(false, MovieOnReset);
+		if (movie_reset_processed)
+			InputBufferPtr = Movie.InputBufferPtr;
+	} while (movie_reset_processed);
+	Movie.InputBufferPtr = InputBufferPtr;
 }
 
 void S9xMovieInit (void)
@@ -1002,6 +1067,45 @@ uint32 S9xMovieGetFrameCounter (void)
 	if (!S9xMovieActive())
 		return (0);
 	return (Movie.CurrentFrame);
+}
+
+
+uint32 S9xMovieGetRerecordCount (void)
+{
+	if(!S9xMovieActive())
+		return (0);
+
+	return (Movie.RerecordCount);
+}
+
+uint32 S9xMovieSetRerecordCount (uint32 newRerecordCount)
+{
+	uint32 oldRerecordCount = 0;
+	if(!S9xMovieActive())
+		return (0);
+
+	oldRerecordCount = Movie.RerecordCount;
+	Movie.RerecordCount = newRerecordCount;
+	return (oldRerecordCount);
+}
+
+bool8 S9xMovieGetRerecordCountSkip (void)
+{
+	if(!S9xMovieActive())
+		return (FALSE);
+
+	return (Movie.SkipRerecordCount);
+}
+
+bool8 S9xMovieSetRerecordCountSkip (bool8 newSkipRerecordCount)
+{
+	bool8 oldSkipRerecordCount = FALSE;
+	if(!S9xMovieActive())
+		return (FALSE);
+
+	oldSkipRerecordCount = Movie.SkipRerecordCount;
+	Movie.SkipRerecordCount = newSkipRerecordCount;
+	return (oldSkipRerecordCount);
 }
 
 void S9xMovieToggleRecState (void)

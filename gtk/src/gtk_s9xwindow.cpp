@@ -213,6 +213,14 @@ void Snes9xWindow::connect_signals()
         save_spc_dialog();
     });
 
+    get_object<Gtk::MenuItem>("new_lua_window")->signal_activate().connect([&] {
+        new_lua_window();
+    });
+
+    get_object<Gtk::MenuItem>("close_lua_windows")->signal_activate().connect([&] {
+        close_all_lua_windows();
+    });
+
     get_object<Gtk::MenuItem>("open_movie_item")->signal_activate().connect([&] {
         if (S9xMovieActive())
             S9xMovieStop(false);
@@ -1597,4 +1605,14 @@ void Snes9xWindow::release_cairo()
         cairo_owned = false;
         cr = nullptr;
     }
+}
+
+void Snes9xWindow::new_lua_window()
+{
+   lua_console_.add_new_window();
+}
+
+void Snes9xWindow::close_all_lua_windows()
+{
+   lua_console_.close_all_windows();
 }

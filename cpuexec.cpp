@@ -12,15 +12,20 @@
 #include "fxemu.h"
 #include "snapshot.h"
 #include "movie.h"
+#include "lua-engine.h"
 #ifdef DEBUGGER
 #include "debug.h"
 #include "missing.h"
 #endif
 
+static inline void StartS9xMainLoop (void);
+static inline void EndS9xMainLoop (void);
 static inline void S9xReschedule (void);
 
 void S9xMainLoop (void)
 {
+	StartS9xMainLoop();
+
 	#define CHECK_FOR_IRQ_CHANGE() \
 	if (Timings.IRQFlagChanging) \
 	{ \
@@ -168,6 +173,29 @@ void S9xMainLoop (void)
 	}
 
 	S9xPackStatus();
+
+	EndS9xMainLoop();
+}
+
+static inline void StartS9xMainLoop (void)
+{
+	extern bool8 pad_read, pad_read_last;
+	pad_read_last = pad_read;
+	pad_read      = FALSE;
+
+	MovieApplyNextInput();
+	CallRegisteredLuaFunctions(LUACALL_BEFOREEMULATION);
+	IPPU.InMainLoop = TRUE;
+}
+
+static inline void EndS9xMainLoop (void)
+{
+	extern bool8 pad_read;
+	if(!pad_read)
+		IPPU.PadIgnoredFrames++;
+
+	IPPU.InMainLoop = FALSE;
+	CallRegisteredLuaFunctions(LUACALL_AFTEREMULATION);
 }
 
 static inline void S9xReschedule (void)

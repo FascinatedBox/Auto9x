@@ -115,6 +115,11 @@ typedef size_t				pint;
 #ifndef PATH_MAX
 #define PATH_MAX        1024
 #endif
+#define _MAX_DRIVE   1
+#define _MAX_DIR  PATH_MAX
+#define _MAX_FNAME   PATH_MAX
+#define _MAX_EXT  PATH_MAX
+#define _MAX_PATH PATH_MAX
 #else
 #ifndef PATH_MAX
 #define PATH_MAX        _MAX_PATH
@@ -122,6 +127,10 @@ typedef size_t				pint;
 #endif
 
 #include "fscompat.h"
+
+#ifndef __WIN32__
+void _splitpath (const char *, char *, char *, char *, char *);
+#endif
 
 #define S9xDisplayString	DisplayStringFromBottom
 #ifdef __WIN32__

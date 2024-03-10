@@ -12,6 +12,7 @@
 #include "port.h"
 #include "gtk_builder_window.h"
 #include "gtk_config.h"
+#include "gtk_lua_window.h"
 
 class Snes9xWindow : public GtkBuilderWindow
 {
@@ -45,6 +46,10 @@ class Snes9xWindow : public GtkBuilderWindow
     void hide_mouse_cursor();
     void toggle_grab_mouse();
     void center_mouse();
+
+    /* Script functions */
+    void new_lua_window();
+    void close_all_lua_windows();
 
     /* Rom-related functions */
     std::string open_rom_dialog(bool run = true);
@@ -111,6 +116,8 @@ class Snes9xWindow : public GtkBuilderWindow
 
     unsigned int last_key_pressed_keyval;
     GdkEventType last_key_pressed_type;
+
+    LuaConsole lua_console_;
 };
 
 typedef struct gtk_splash_t

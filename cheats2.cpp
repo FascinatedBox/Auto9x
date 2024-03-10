@@ -784,3 +784,13 @@ int S9xImportCheatsFromDatabase(const std::string &filename)
 
     return -2; /* No codes */
 }
+
+uint8 Auto9xGetByteFree(uint32 Address)
+{
+    return S9xGetByteFree(Address);
+}
+
+void Auto9xSetByteFree(uint8 Byte, uint32 Address)
+{
+    S9xSetByteFree(Byte, Address);
+}

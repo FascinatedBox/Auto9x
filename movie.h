@@ -76,5 +76,11 @@ bool MovieGetScope (int, uint8 d[SCOPE_DATA_SIZE]);
 void MovieSetScope (int, uint8 d[SCOPE_DATA_SIZE]);
 bool MovieGetJustifier (int, uint8 d[JUSTIFIER_DATA_SIZE]);
 void MovieSetJustifier (int, uint8 d[JUSTIFIER_DATA_SIZE]);
+void MovieApplyNextInput(void);
+
+uint32 S9xMovieGetRerecordCount (void);
+uint32 S9xMovieSetRerecordCount (uint32 newRerecordCount);
+bool8 S9xMovieGetRerecordCountSkip (void);
+bool8 S9xMovieSetRerecordCountSkip (bool8 newSkipRerecordCount);
 
 #endif

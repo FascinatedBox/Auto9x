@@ -347,6 +347,21 @@ list(APPEND SOURCES
     src/background_particles.cpp
     src/background_particles.h)
 
+# Begin automation section
+# 5.1 is required because 5.2 changed internals involving globals.
+find_package(Lua "5.1" EXACT REQUIRED)
+# Since lua-engine.c uses Lua internals, Lua's header files are included.
+list(APPEND INCLUDES "lua/include/")
+list(APPEND LIBS ${LUA_LIBRARY})
+list(APPEND SOURCES
+    ../lua-engine.cpp
+    ../lua-engine.h
+    src/gtk_lua_window.cpp
+    src/gtk_lua_window.h
+    src/gtk_scripting.cpp
+    src/gtk_scripting.h)
+# End of automation section
+
 list(APPEND SOURCES ../external/fmt/src/format.cc)
 list(APPEND INCLUDES ../external/fmt/include)
 
