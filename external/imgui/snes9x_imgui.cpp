@@ -78,7 +78,8 @@ static void ImGui_DrawPressedKeys(int spacing)
         }
 
         case CTL_JOYPAD: {
-            std::string prefix = "#" + std::to_string(port + 1) + " ";
+            static std::string prefixes[] = {"", "#2 "};
+            std::string prefix = prefixes[port];
             auto prefix_size = ImGui::CalcTextSize(prefix.c_str());
             int box_width = 2 * spacing + prefix_size.x + cell_width * keyorder.size();
             int box_height = 2 * spacing + prefix_size.y;
