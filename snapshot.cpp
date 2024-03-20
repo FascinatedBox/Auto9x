@@ -1049,7 +1049,8 @@ bool8 S9xFreezeGame (const char *filename)
 		else
 			sprintf(String, SAVE_INFO_SNAPSHOT " %s", base.c_str());
 
-		S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
+		// box: I don't care.
+		//S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
 
 		return (TRUE);
 	}
@@ -1128,7 +1129,8 @@ bool8 S9xUnfreezeGame (const char *filename)
 		else
 			sprintf(String, SAVE_INFO_LOAD " %s", base.c_str());
 
-		S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
+		// box: I don't care.
+		//S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
 
 		return (TRUE);
 	}

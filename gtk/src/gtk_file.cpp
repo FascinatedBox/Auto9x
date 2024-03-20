@@ -156,8 +156,9 @@ void S9xLoadState(std::string filename)
 
     if (S9xUnfreezeGame(filename.c_str()))
     {
-        auto info_string = filename + " loaded"s;
-        S9xSetInfoString(info_string.c_str());
+        // box: I don't care.
+        //auto info_string = filename + " loaded"s;
+        //S9xSetInfoString(info_string.c_str());
     }
     else
     {
@@ -169,8 +170,9 @@ void S9xSaveState(std::string filename)
 {
     if (S9xFreezeGame(filename.c_str()))
     {
-        auto info_string = filename + " saved"s;
-        S9xSetInfoString(info_string.c_str());
+        // box: I don't care.
+        // auto info_string = filename + " saved"s;
+        // S9xSetInfoString(info_string.c_str());
     }
     else
     {
@@ -198,8 +200,9 @@ void S9xQuickSaveSlot(int slot)
     auto filename = save_slot_path(slot);
     if (S9xFreezeGame(filename.c_str()))
     {
-        auto info_string = filename.filename().string() + " saved";
-        S9xSetInfoString(info_string.c_str());
+        // box: I don't care.
+        // auto info_string = filename.filename().string() + " saved";
+        // S9xSetInfoString(info_string.c_str());
     }
 }
 
@@ -215,8 +218,9 @@ void S9xQuickLoadSlot(int slot)
 
     if (S9xUnfreezeGame(filename.c_str()))
     {
-        auto info_string = filename.filename().string() + " loaded";
-        S9xSetInfoString(info_string.c_str());
+        // box: I don't care.
+        //auto info_string = filename.filename().string() + " loaded";
+        //S9xSetInfoString(info_string.c_str());
         return;
     }
 

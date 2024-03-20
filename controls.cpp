@@ -2301,8 +2301,9 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 						if (S9xUnfreezeGame(filename.c_str()))
 						{
-							snprintf(buf, 256, "%s loaded", S9xBasename(filename).c_str());
-							S9xSetInfoString(buf);
+							// box: I don't care.
+							//snprintf(buf, 256, "%s loaded", S9xBasename(filename).c_str());
+							//S9xSetInfoString(buf);
 						}
 						else
 							S9xMessage(S9X_ERROR, S9X_FREEZE_FILE_NOT_FOUND, "Freeze file not found");
@@ -2328,8 +2329,9 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 						auto filename = S9xGetFilename(ext, SNAPSHOT_DIR);
 
-						snprintf(buf, 256, "%s saved", S9xBasename(filename).c_str());
-						S9xSetInfoString(buf);
+						// box: I don't care.
+						//snprintf(buf, 256, "%s saved", S9xBasename(filename).c_str());
+						//S9xSetInfoString(buf);
 
 						S9xFreezeGame(filename.c_str());
 						break;
